@@ -45,8 +45,11 @@ const CreatePostsScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    const image = setPreviewImage();
+    const isTitleEntered = setTitle();
+    const isLocationEntered = setLocation();
     setIsFormValid(image !== "" && isTitleEntered && isLocationEntered);
-  }, [image, isTitleEntered, isLocationEntered]);
+  }, []);
 
   const pablishPost = () => {
     if (isFormValid) {
@@ -163,7 +166,7 @@ const CreatePostsScreen = ({ navigation }) => {
             </View>
             <TouchableOpacity onPress={deletePreviewImage}>
               <Text style={styles.text}>
-                {isImageAdd ? "Редагувати фото" : "Завантажте фото"}
+                {previewImage ? "Редагувати фото" : "Завантажте фото"}
               </Text>
             </TouchableOpacity>
           </View>
