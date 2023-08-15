@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +8,18 @@ import {
   Image,
 } from "react-native";
 
-const PostsScreen = ({ navigation }) => {
+const PostsScreen = ({ route }) => {
+  const [posts, setPosts] = useState([]);
+  console.log("route.params", route.params);
+
+  useEffect(() => {
+    if (route.params) {
+      setPosts((prevState) => [...prevState, route.params]);
+    }
+  }, [route.params]);
+
+  console.log("posts", posts);
+
   return (
     <View style={styles.page}>
       <View style={styles.header}>
@@ -48,7 +60,7 @@ const PostsScreen = ({ navigation }) => {
                 source={require("../images/forest.jpg")}
               />
             </TouchableOpacity>
-            <View style={styles.postContent}>
+            <View style={styles.post}>
               <Text style={styles.postTitle}>Ліс</Text>
               <View style={styles.postMeta}>
                 <TouchableOpacity

@@ -9,10 +9,9 @@ import {
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import React, { useState, useEffect } from "react";
-import { Camera, CameraType, getAvailablePictureSizesAsync } from "expo-camera";
+import { Camera, CameraType } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 
-import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 
 const CreatePostsScreen = ({ navigation }) => {
@@ -37,7 +36,7 @@ const CreatePostsScreen = ({ navigation }) => {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestPermissionsAsync();
+      let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         console.log("Permission to access location was denied");
       }
@@ -60,14 +59,14 @@ const CreatePostsScreen = ({ navigation }) => {
 
       console.log(previewImage, title, locationText, location);
 
-      navigation.navigate("Home");
+      navigation.navigate("PostsScreen", {previewImage});
     }
   };
 
   useEffect(() => {
     (async () => {
       try {
-        const { status } = await Camera.requestPermissionsAsync();
+        const { status } = await Camera.requestCameraPermissionsAsync();
         await MediaLibrary.requestPermissionsAsync();
 
         setHasPermission(status === "granted");
@@ -89,7 +88,7 @@ const CreatePostsScreen = ({ navigation }) => {
       const { uri } = await cameraRef.takePictureAsync();
       await MediaLibrary.createAssetAsync(uri);
 
-      const { status } = await Location.requestPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         console.log("Permission to access location was denied");
         return;
@@ -177,7 +176,7 @@ const CreatePostsScreen = ({ navigation }) => {
                 focusedInput === "title" && [styles.inputFocused],
               ]}
               name="title"
-              value={title}
+              value={"title"}
               placeholder="Назва..."
               onChangeText={(text) => {
                 setTitle(text);
@@ -197,7 +196,7 @@ const CreatePostsScreen = ({ navigation }) => {
                 focusedInput === "location" && [styles.inputFocused],
               ]}
               name="location"
-              value={location}
+              value={"location"}
               placeholder="Місцевість"
               onChangeText={(text) => {
                 setLocation(text);
@@ -209,8 +208,7 @@ const CreatePostsScreen = ({ navigation }) => {
           <TouchableOpacity
             style={[styles.button, isFormValid && styles.buttonValid]}
             onPress={pablishPost}
-            disabled={!isFormValid}
-          >
+            >
             <Text
               style={[styles.buttonText, isFormValid && styles.buttonTextValid]}
             >
@@ -314,9 +312,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
-  //     image {
-  //     flex: 1,
-  //   },
   photoView: {
     flex: 1,
     justifyContent: "center",

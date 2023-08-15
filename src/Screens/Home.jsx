@@ -1,10 +1,11 @@
 import React from "react";
 import { View, StyleSheet, Image } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
+
 import ProfileScreen from "./ProfileScreen";
 import PostsScreen from "./PostsScreen";
 import CreatePostsScreen from "./CreatePostsScreen";
-import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
 const Tabs = createBottomTabNavigator();
 
@@ -13,9 +14,11 @@ const TabBarIcon = ({ routeName, focused }) => {
 
   if (routeName === "Profile") {
     iconSource = require("../images/user.png");
-  } else if (routeName === "PostsScreen") {
+  }
+  if (routeName === "PostsScreen") {
     iconSource = require("../images/grid.png");
-  } else if (routeName === "CreatePosts") {
+  }
+  if (routeName === "CreatePosts") {
     iconSource = require("../images/new.png");
   }
 
@@ -54,20 +57,20 @@ const Home = ({ navigation, route }) => {
               <TabBarIcon routeName={route.name} focused={focused} />
             ),
             headerShown: false,
-            tabBarStyle:{
+            tabBarStyle: {
               borderTopColor: "rgba(0, 0, 0, 0.2)",
               borderTopStyle: "solid",
               borderTopWidth: 1,
               paddingTop: 9,
               paddingBottom: 9,
-              justifyContent: 'center',
-              alignItems: 'center',
+              justifyContent: "center",
+              alignItems: "center",
             },
-            tabBarItemStyle:{
+            tabBarItemStyle: {
               margin: 9,
               flex: 0,
               width: 70,
-            }
+            },
           })}
           tabBarOptions={{
             activeTintColor: "#FF6C00",
