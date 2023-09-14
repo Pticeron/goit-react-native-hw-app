@@ -1,5 +1,8 @@
 import "react-native-gesture-handler";
 import React from "react";
+import { Provider } from "react-redux";
+import { PersistGate } from 'redux-persist/integration/react';
+
 import { useFonts } from "expo-font";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -14,6 +17,8 @@ import CreatePostsScreen from './src/Screens/CreatePostsScreen';
 import CommentsScreen from './src/Screens/CommentsScreen';
 import ProfileScreen from './src/Screens/ProfileScreen';
 
+import {store, persistor} from './redux/store'
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     "Roboto-Regular": require("./src/fonts/Roboto-Regular.ttf"),
@@ -27,6 +32,10 @@ export default function App() {
   const MainStack = createStackNavigator();
 
   return (
+    <Provider store={store}>
+     <PersistGate
+        loading={<Text>Loading...</Text>}
+        persistor={store.persistor}>
     <NavigationContainer>
       <MainStack.Navigator initialRouteName="RegistrationScreen">
         <MainStack.Screen
@@ -59,8 +68,9 @@ export default function App() {
         />
       </MainStack.Navigator>
     </NavigationContainer>
+    </PersistGate>
+    </Provider>
   );
 }
 
-// https://fir-47639-default-rtdb.firebaseio.com/
-// https://fir-47639-default-rtdb.firebaseio.com/
+
