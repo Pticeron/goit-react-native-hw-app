@@ -10,8 +10,6 @@ import {
 
 import { auth } from "../../firebase/config";
 
-
-
 export const register = createAsyncThunk(
   'auth/register',
   async ({ email, password, nickName }, thunkAPI) => {

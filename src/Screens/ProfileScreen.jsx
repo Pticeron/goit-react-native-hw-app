@@ -1,248 +1,270 @@
-import {
-  Keyboard,
-  ImageBackground,
-  Image,
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  ScrollView,
-} from "react-native";
 import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  ImageBackground,
+} from "react-native";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../../firebase/config";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUserId, selectUser } from "../../redux/auth/selectors";
+import bgImage from "../images/bg-img.jpg";
+import avatar from "../images/avatar.jpg";
+import { Ionicons } from "@expo/vector-icons";
+import { EvilIcons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { logOut } from "../../redux/auth/authOperations";
 
-const ProfileScreen = ({ navigation }) => {
-  const addImage = (e) => {
-    e.preventDefault();
+export const ProfileScreen = () => {
+  const [posts, setPosts] = useState([]);
+
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const isFocused = useIsFocused();
+  const userId = useSelector(selectUserId);
+
+  const { nickName } = useSelector(selectUser);
+
+  useEffect(() => {
+    if (isFocused) {
+      getDataFromFirestore();
+    }
+  }, [isFocused]);
+
+  const getDataFromFirestore = async () => {
+    try {
+      let arr = [];
+      const q = query(collection(db, "posts"), where("userId", "==", userId));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) =>
+        arr.push({ id: doc.id, data: doc.data() })
+      );
+      setPosts(arr);
+    } catch (error) {
+      console.log(error.message);
+      throw error;
+    }
+  };
+
+  const handleLogout = () => {
+    dispatch(logOut());
+    navigation.navigate("Login");
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.page}>
-        <ImageBackground
-          source={require("../images/bg-img.jpg")}
-          style={styles.imageBackground}
-          imageStyle={{
-            minHeight: 812,
-          }}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : null}
-            style={styles.container}
-          >
-            <View>
-              <TouchableOpacity
-                style={styles.buttonLogOut}
-                onPress={() => navigation.navigate("Login")}
-              >
-                <Image
-                  style={styles.iconLogOut}
-                  source={require("../images/log-out.png")}
-                />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.avatar}>
-              <Image
-                style={styles.avatarImage}
-                source={require("../images/avatar.jpg")}
-              />
-              <TouchableOpacity style={styles.buttonAdd} onPress={addImage}>
-                <Image
-                  style={styles.buttonAddIcon}
-                  source={require("../images/added.png")}
-                />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.nameTitle}>Natali Romanova</Text>
-            </View>
-            <View style={styles.posts}>
-              <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.post}>
-                  <TouchableOpacity
-                    style={styles.postImageLink}
-                    onPress={() => navigation.navigate("Home")}
-                  >
-                    <Image
-                      style={styles.postImage}
-                      source={require("../images/sunset.jpg")}
-                    />
-                  </TouchableOpacity>
-                  <View style={styles.postContent}>
-                    <Text style={styles.postTitle}>Ліс</Text>
-                    <View style={styles.postMeta}>
+    <View style={styles.container}>
+      <ImageBackground
+        source={bgImage}
+        resizeMode="cover"
+        style={styles.bgImage}
+      >
+        <View style={styles.postListContainer}>
+          <TouchableOpacity style={styles.logOutBtn} onPress={handleLogout}>
+            <MaterialIcons name="logout" size={28} color="#BDBDBD" />
+          </TouchableOpacity>
+          <Image style={styles.imageAvatar} source={avatar} />
+          <View style={styles.svg}>
+            <AntDesign name="closecircleo" size={24} color="#BDBDBD" />
+          </View>
+          <Text style={styles.header}>{nickName}</Text>
+
+          <FlatList
+            data={posts}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => {
+              const locationName = item.data.locationName;
+              const location = item.data.location;
+              const photo = item.data.photo;
+              const comments = item.data.comments;
+              const numberOfComments = comments.length;
+              const numberOfLikes = item.data.likes;
+
+              return (
+                <View style={styles.postContainer}>
+                  <Image source={{ uri: photo }} style={styles.image} />
+                  {locationName ? (
+                    <Text style={styles.text}>{locationName}</Text>
+                  ) : (
+                    ""
+                  )}
+                  <View style={styles.btnContainer}>
+                    <View style={styles.leftButtonsContainer}>
                       <TouchableOpacity
-                        style={styles.postComments}
-                        onPress={() => navigation.navigate("Comments")}
+                        activeOpacity={0.7}
+                        style={styles.button}
+                        onPress={() =>
+                          navigation.navigate("Коментарі", {
+                            photo: item.data.photo,
+                            postId: item.id,
+                            comments: comments || [],
+                          })
+                        }
                       >
-                        <Image
-                          style={styles.postIcon}
-                          source={require("../images/comments.png")}
+                        <EvilIcons
+                          name="comment"
+                          size={26}
+                          color={numberOfComments !== 0 ? "#FF6C00" : "#BDBDBD"}
                         />
-                        <Text style={styles.postCount}>8</Text>
-                      </TouchableOpacity>
-                      <View style={styles.postLikes}>
-                        <Image
-                          style={styles.postIcon}
-                          source={require("../images/like.png")}
-                        />
-                        <Text style={styles.postCount}>200</Text>
-                      </View>
-                      <View style={styles.postLocationInfo}>
-                        <Image
-                          style={styles.postIcon}
-                          source={require("../images/map.png")}
-                        />
-                        <TouchableOpacity
-                          onPress={() => navigation.navigate("Map")}
+                        <Text
+                          style={{
+                            ...styles.commentText,
+                            color:
+                              numberOfComments !== 0 ? "#212121" : "#BDBDBD",
+                          }}
                         >
-                          <Text style={styles.postLocationAddress}>
-                            Ukraine
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
+                          {numberOfComments || 0}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        style={{ ...styles.button, marginLeft: 24 }}
+                        onPress={() => onLikePressed(item.id)}
+                      >
+                        <AntDesign
+                          name="like2"
+                          size={22}
+                          color={numberOfLikes !== 0 ? "#FF6C00" : "#BDBDBD"}
+                        />
+                        <Text
+                          style={{
+                            color: "#BDBDBD",
+                            marginLeft: 5,
+                            fontSize: 16,
+                            color: numberOfLikes !== 0 ? "#212121" : "#BDBDBD",
+                          }}
+                        >
+                          {numberOfLikes}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
+
+                    {location ? (
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        style={styles.button}
+                        onPress={() =>
+                          navigation.navigate("Локація", {
+                            locationName,
+                            location,
+                          })
+                        }
+                      >
+                        <Ionicons
+                          name="ios-location-outline"
+                          size={26}
+                          color="#BDBDBD"
+                        />
+                        <Text style={styles.locationText}>{locationName}</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      ""
+                    )}
                   </View>
                 </View>
-              </ScrollView>
-            </View>
-          </KeyboardAvoidingView>
-        </ImageBackground>
-      </View>
-    </TouchableWithoutFeedback>
+              );
+            }}
+          />
+        </View>
+      </ImageBackground>
+    </View>
   );
 };
 
-export default ProfileScreen;
-
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-  },
-  imageBackground: {
+  container: {
     flex: 1,
     position: "relative",
   },
-  container: {
+  bgImage: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingTop: 177,
+  },
+  image: {
+    width: 343,
+    height: 240,
+    borderRadius: 8,
+  },
+  imageAvatar: {
+    width: 120,
+    height: 120,
     position: "absolute",
-    bottom: 0,
-    width: "100%",
-    top: 147,
-    padding: 16,
+    alignSelf: "center",
+    top: -60,
+    backgroundColor: "#F6F6F6",
+    borderRadius: 16,
+  },
+  svg: {
+    position: "absolute",
+    width: 25,
+    height: 25,
+    left: 240,
+    top: 23,
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    borderColor: "transparent",
+  },
+  logOutBtn: {
+    marginRight: 15,
+    position: "absolute",
+    right: 16,
+    top: 22,
+  },
+  postListContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
     backgroundColor: "#fff",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
   },
-  buttonLogOut: {
-    position: "absolute",
-    top: 22,
-    right: 16,
-    width: 24,
-    height: 24,
-  },
-  iconLogOut: {
-    width: 24,
-    height: 24,
-  },
-  avatar: {
-    position: "relative",
-    backgroundColor: "#F6F6F6",
-    borderRadius: 16,
-    marginBottom: 32,
-    width: 120,
-    aspectRatio: 1,
-    marginTop: -76,
-    marginLeft: "auto",
-    marginRight: "auto",
-  },
-  buttonAdd: {
-    position: "absolute",
-    width: 25,
-    height: 25,
-    right: -14,
-    bottom: 14,
-  },
-  buttonAddIcon: {
-    width: 25,
-    height: 25,
-  },
-  avatarImage: {
-    borderRadius: 16,
-    width: 120,
-    height: 120,
-  },
-  titleContainer: {
-    marginBottom: 33,
-  },
-  nameTitle: {
+  header: {
+    color: "black",
+    marginTop: 92,
+    marginBottom: 25,
     fontSize: 30,
     lineHeight: 35,
+    fontWeight: "500",
     textAlign: "center",
-    fontFamily: "Roboto-Medium",
   },
-  posts: {
-    flex: 1,
-    position: "relative",
-  },
-  scrollContent: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    overflow: "scroll",
-  },
-  post: {
-    marginBottom: 32,
-  },
-  postImageLink: {
-    marginBottom: 8,
-  },
-  postImage: {
-    height: 240,
-    borderRadius: 8,
-    width: "100%",
-  },
-  postTitle: {
+  text: {
     fontSize: 16,
-    lineHeight: 18,
-    color: "#212121",
-    marginBottom: 8,
+    fontWeight: "500",
+    marginTop: 5,
   },
-  postMeta: {
+  button: {
+    justifyContent: "center",
+    alignItems: "center",
     flexDirection: "row",
-    gap: 24,
   },
-  postIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 4,
+  btnContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+    alignItems: "center",
   },
-  postCount: {
-    fontSize: 16,
-    lineHeight: 18,
-    color: "#212121",
-  },
-  postComments: {
-    flexShrink: 0,
+  leftButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
-  postLikes: {
-    flexDirection: "row",
-    alignItems: "center",
+  postContainer: {
+    marginTop: 25,
   },
-  postLocationInfo: {
-    marginLeft: "auto",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  postLocationAddress: {
+  locationText: {
     fontSize: 16,
-    lineHeight: 18,
-    color: "#212121",
-    textDecorationLine: "underline",
+    borderBottomWidth: 1,
+    borderBottomColor: "#212121",
+    marginLeft: 4,
+  },
+  commentText: {
+    marginLeft: 5,
+    fontSize: 16,
   },
 });

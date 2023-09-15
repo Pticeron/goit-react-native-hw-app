@@ -1,12 +1,40 @@
 import React from "react";
-import { Text, View, StyleSheet, Dimensions } from "react-native";
+import { View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 
-const Home = () => {
+export const MapScreen = ({ route }) => {
+  if (route.params.location) {
+    const location = route.params.location;
+    return (
+      <View style={{ flex: 1 }}>
+        {location && (
+          <MapView
+            style={{ flex: 1 }}
+            showsUserLocation={true}
+            region={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          >
+            <Marker
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              title={route.params.locationName}
+            />
+          </MapView>
+        )}
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <MapView
-        style={styles.mapStyle}
+        style={{ flex: 1 }}
         region={{
           latitude: 37.78825,
           longitude: -122.4324,
@@ -27,18 +55,3 @@ const Home = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  mapStyle: {
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
-  },
-});
-
-export default Home;

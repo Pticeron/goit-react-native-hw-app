@@ -1,109 +1,86 @@
 import React from "react";
-import { View, StyleSheet, Image } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
-
-import ProfileScreen from "./ProfileScreen";
-import PostsScreen from "./PostsScreen";
-import CreatePostsScreen from "./CreatePostsScreen";
+import { View, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { PostsScreen } from "./PostsScreen";
+import { CreatePostsScreen } from "./CreatePostsScreen";
+import { ProfileScreen } from "./ProfileScreen";
+import { AntDesign } from "@expo/vector-icons";
+import { Octicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 const Tabs = createBottomTabNavigator();
 
-const TabBarIcon = ({ routeName, focused }) => {
-  let iconSource, backgroundColor, iconColor;
+export const Home = () => {
+  const navigation = useNavigation();
 
-  if (routeName === "Profile") {
-    iconSource = require("../images/user.png");
-  }
-  if (routeName === "PostsScreen") {
-    iconSource = require("../images/grid.png");
-  }
-  if (routeName === "CreatePosts") {
-    iconSource = require("../images/new.png");
-  }
-
-  if (focused) {
-    backgroundColor = "#FF6C00";
-    iconColor = "#FFFFFF";
-  } else {
-    backgroundColor = "#FFFFFF";
-    iconColor = "#000000";
-  }
+  const getTabBarStyle = (route) => {
+    const routeName = getFocusedRouteNameFromRoute(route) ?? "Home";
+    let display = routeName === "Коментарі" ? "none" : "flex";
+    return { display };
+  };
 
   return (
-    <View style={[styles.tabIconContainer, { backgroundColor }]}>
-      <Image
-        source={iconSource}
-        style={[styles.tabIcon, { tintColor: iconColor }]}
+    <Tabs.Navigator tabBarOptions={{ showLabel: false }}>
+      <Tabs.Screen
+        name="CommonPostsScreen"
+        component={PostsScreen}
+        options={({ route }) => ({
+          tabBarStyle: getTabBarStyle(route),
+          tabBarIcon: ({ focused, size, color }) => (
+            <AntDesign name="appstore-o" size={24} color="#212121" />
+          ),
+          headerShown: false,
+        })}
       />
-    </View>
+
+      <Tabs.Screen
+        name="Створити публікацію"
+        component={CreatePostsScreen}
+        options={{
+          tabBarIcon: ({ focused, size, color }) => (
+            <View
+              style={{
+                width: 70,
+                height: 40,
+                backgroundColor: "#FF6C00",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 50,
+              }}
+            >
+              <Octicons name="plus" size={15} color="#FFF" />
+            </View>
+          ),
+          headerTitleAlign: "center",
+          tabBarStyle: [{ display: "none" }],
+          headerLeft: () => (
+            <TouchableOpacity
+              style={{ marginLeft: 15 }}
+              onPress={() => navigation.navigate("CommonPostsScreen")}
+            >
+              <Ionicons
+                name="ios-arrow-back-outline"
+                size={28}
+                color="#BDBDBD"
+              />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ focused, size, color }) => (
+            <FontAwesome5 name="user" size={24} color="#212121" />
+          ),
+          headerShown: false,
+        }}
+      />
+    </Tabs.Navigator>
   );
 };
-
-const Home = ({ navigation, route }) => {
-  let tabBarVisible = true;
-  let routeName = getFocusedRouteNameFromRoute(route);
-  if (routeName === "CreatePosts") {
-    tabBarVisible = false;
-    navigation.navigate("CreatePosts");
-  }
-
-  return (
-    <View style={styles.page}>
-      {tabBarVisible && (
-        <Tabs.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused }) => (
-              <TabBarIcon routeName={route.name} focused={focused} />
-            ),
-            headerShown: false,
-            tabBarStyle: {
-              borderTopColor: "rgba(0, 0, 0, 0.2)",
-              borderTopStyle: "solid",
-              borderTopWidth: 1,
-              paddingTop: 9,
-              paddingBottom: 9,
-              justifyContent: "center",
-              alignItems: "center",
-            },
-            tabBarItemStyle: {
-              margin: 9,
-              flex: 0,
-              width: 70,
-            },
-          })}
-          tabBarOptions={{
-            activeTintColor: "#FF6C00",
-            inactiveTintColor: "#212121",
-            labelStyle: { display: "none" },
-            style: styles.tabBarStyle,
-            tabStyle: styles.tabStyle,
-          }}
-        >
-          <Tabs.Screen name="PostsScreen" component={PostsScreen} />
-          <Tabs.Screen name="CreatePosts" component={CreatePostsScreen} />
-          <Tabs.Screen name="Profile" component={ProfileScreen} />
-        </Tabs.Navigator>
-      )}
-    </View>
-  );
-};
-
-export default Home;
-
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-  },
-  tabIconContainer: {
-    width: 70,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tabIcon: {
-    width: 24,
-    height: 24,
-  },
-});

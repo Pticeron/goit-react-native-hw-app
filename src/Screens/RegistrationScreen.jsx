@@ -1,165 +1,167 @@
+import React, { useState, useEffect } from "react";
 import {
-  Keyboard,
-  ImageBackground,
-  Image,
   StyleSheet,
-  View,
   Text,
+  View,
+  ImageBackground,
   TextInput,
+  Image,
   TouchableOpacity,
+  Alert,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
+import bgImage from "../images/bg-img.jpg";
+import avatar from "../images/avatar.jpg";
+import { AntDesign } from "@expo/vector-icons";
+import { useDispatch, useSelector } from "react-redux";
+import { register } from "../../redux/auth/authOperations";
+import { selectIsLoggedIn } from "../../redux/auth/selectors";
+// import { authReducer } from "../../redux/auth/authSlice";
 
-const RegistrationScreen = ({ navigation }) => {
-  const [focusedInput, setFocusedInput] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
+const initialData = {
+  nickName: "",
+  email: "",
+  password: "",
+};
 
-  const [login, setLogin] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export const RegistrationScreen = () => {
+  const [isKeyboardShown, setisKeyboardShown] = useState(false);
+  const [isPasswordSecure, setIsPasswordSecure] = useState(true);
+  const [formData, setFormData] = useState(initialData);
 
-  const [isFormValid, setIsFormValid] = useState(false);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    setIsFormValid(login !== "" && email && password);
-  }, [login, email, password]);
+    if (isLoggedIn) {
+      navigation.navigate("Home", {
+        screen: "PostsScreen",
+      });
+    }
+  }, [isLoggedIn]);
 
-  const addImage = (e) => {
-    e.preventDefault();
+  const keyBoardHide = () => {
+    Keyboard.dismiss();
+    setisKeyboardShown(false);
   };
 
-  const showHidePassword = (e) => {
-    e.preventDefault();
-    setShowPassword(!showPassword);
-  };
-
-  const signIn = () => {
-    if (isFormValid) {
-      setLogin(login);
-      setEmail(email);
-      setPassword(password);
-
-      console.log({ Login: login, Email: email, Password: password });
-
-      setLogin("");
-      setEmail("");
-      setPassword("");
-
-      navigation.navigate("Home");
+  const onSubmit = () => {
+    keyBoardHide();
+    if (!formData.email.includes("@") || formData.email.length < 7) {
+      Alert.alert(
+        "Your email has to include '@' and be more than 7 symbols!!!"
+      );
+    } else if (formData.password.length < 7) {
+      Alert.alert("Your password's length must be more than 7 symbols !!!");
+    } else if (formData.password.length < 7 && !formData.email.includes("@")) {
+      Alert.alert("Please fill in the fields!");
+    } else if (!formData.nickName) {
+      Alert.alert("Don't forget your login))");
+    } else {
+      console.log(formData);
+      setFormData(initialData);
+      dispatch(
+        register({
+          nickName: formData.nickName,
+          email: formData.email,
+          password: formData.password,
+        })
+      );
+      navigation.navigate("Home", {
+        screen: "PostsScreen",
+      });
     }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.page}>
+    <TouchableWithoutFeedback onPress={keyBoardHide}>
+      <View style={styles.container}>
         <ImageBackground
-          source={require("../images/bg-img.jpg")}
-          style={styles.imageBackground}
+          source={bgImage}
+          resizeMode="cover"
+          style={styles.image}
         >
           <KeyboardAvoidingView
+            // behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={-100}
             behavior="padding"
-            style={styles.container}
-          >
-            <View style={styles.avatar}>
+          > 
+            <View style={styles.form}>
               <Image
-                style={styles.avatarImage}
-                source={require("../images/avatar.jpg")}
+                style={styles.imageAvatar}
+                source={avatar}
               />
-              <TouchableOpacity style={styles.buttonAdd} onPress={addImage}>
-                <Image
-                  style={styles.buttonAddIcon}
-                  source={require("../images/added.png")}
+              <View style={styles.svg}>
+                <AntDesign
+                  name="pluscircleo"
+                  size={25}
+                  color="#FF6C00"
+                  backgroundColor="#FFFFFF"
                 />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.registrationTitle}>Реєстрація</Text>
-            </View>
-            <View style={styles.formContainer}>
+              </View>
+              <Text style={styles.header}>Реєстрація</Text>
               <TextInput
-                style={[
-                  [styles.input],
-                  focusedInput === "login" && [styles.inputFocused],
-                ]}
-                placeholderTextColor={"#BDBDBD"}
+                style={styles.textInput}
                 placeholder="Логін"
-                name="login"
-                value={login}
-                onChangeText={(text) => {
-                  setLogin(text);
-                  console.log("Login:", text);
-                }}
-                onFocus={() => setFocusedInput("login")}
-                onBlur={() => setFocusedInput(null)}
+                onFocus={() => setisKeyboardShown(true)}
+                value={formData.nickName}
+                onChangeText={(value) =>
+                  setFormData((prevState) => ({
+                    ...prevState,
+                    nickName: value,
+                  }))
+                }
               />
-            </View>
-            <View style={styles.formContainer}>
               <TextInput
-                style={[
-                  [styles.input],
-                  focusedInput === "email" && [styles.inputFocused],
-                ]}
-                placeholderTextColor={"#BDBDBD"}
+                style={styles.textInput}
                 placeholder="Адреса електронної пошти"
-                name="email"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  console.log("Email:", text);
-                }}
-                onFocus={() => setFocusedInput("email")}
-                onBlur={() => setFocusedInput(null)}
+                onFocus={() => setisKeyboardShown(true)}
+                value={formData.email}
+                onChangeText={(value) =>
+                  setFormData((prevState) => ({ ...prevState, email: value }))
+                }
               />
-            </View>
-            <View style={styles.formContainer}>
               <TextInput
-                style={[
-                  [styles.input],
-                  focusedInput === "password" && [styles.inputFocused],
-                ]}
-                placeholderTextColor={"#BDBDBD"}
+                style={styles.textInput}
                 placeholder="Пароль"
-                name="password"
-                value={password}
-                secureTextEntry={!showPassword}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  console.log("Password:", text);
-                }}
-                onFocus={() => setFocusedInput("password")}
-                onBlur={() => setFocusedInput(null)}
+                secureTextEntry={isPasswordSecure}
+                onFocus={() => setisKeyboardShown(true)}
+                value={formData.password}
+                onChangeText={(value) =>
+                  setFormData((prevState) => ({
+                    ...prevState,
+                    password: value,
+                  }))
+                }
               />
               <TouchableOpacity
-                style={styles.buttonShow}
-                onPress={showHidePassword}
+                activeOpacity={0.7}
+                style={styles.inputLink}
+                onPress={() => setIsPasswordSecure(!isPasswordSecure)}
               >
-                <Text style={styles.buttonShowText}>
-                  {showPassword ? "Приховати" : "Показати"}
+                <Text style={styles.inputLinkText}>
+                  {isPasswordSecure ? "Показати" : "Сховати"}
                 </Text>
               </TouchableOpacity>
-            </View>
-            <View style={styles.actions}>
               <TouchableOpacity
+                activeOpacity={0.7}
                 style={styles.button}
-                onPress={signIn}
-                disabled={!isFormValid}
+                onPress={onSubmit}
               >
-                <Text style={styles.buttonText}>Зареєструватися</Text>
+                <Text style={styles.appButtonText}>Зареєстуватися</Text>
               </TouchableOpacity>
-              <View style={styles.redirection}>
-                <Text style={styles.redirectionText}>Вже є акаунт?</Text>
-                <TouchableOpacity>
-                  <Text
-                    style={styles.redirectionLink}
-                    onPress={() => navigation.navigate("Login")}
-                  >
-                    Увійти
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.link}
+                onPress={() => navigation.navigate("Login")}
+              >
+                <Text style={styles.linkText}>Вже є акаунт? Увійти</Text>
+              </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
         </ImageBackground>
@@ -168,124 +170,99 @@ const RegistrationScreen = ({ navigation }) => {
   );
 };
 
-export default RegistrationScreen;
-
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-  },
-  imageBackground: {
-    flex: 1,
-    position: "relative",
-  },
   container: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    minHeight: 549,
-    padding: 16,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-  },
-  avatar: {
+    flex: 1,
     position: "relative",
-    backgroundColor: "#F6F6F6",
-    borderRadius: 16,
+  },
+  image: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  header: {
+    color: "black",
+    marginTop: 92,
     marginBottom: 32,
-    width: 120,
-    aspectRatio: 1,
-    marginTop: -76,
-    marginLeft: "auto",
-    marginRight: "auto",
-  },
-  buttonAdd: {
-    position: "absolute",
-    width: 25,
-    height: 25,
-    right: -14,
-    bottom: 14,
-  },
-  buttonAddIcon: {
-    width: 25,
-    height: 25,
-  },
-  avatarImage: {
-    borderRadius: 16,
-    width: 120,
-    height: 120,
-  },
-  titleContainer: {
-    marginBottom: 33,
-  },
-  registrationTitle: {
     fontSize: 30,
     lineHeight: 35,
+    fontWeight: "500",
     textAlign: "center",
-    fontFamily: "Roboto-Medium",
   },
-  formContainer: {
-    position: "relative",
+  form: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: 45,
+  },
+  textInput: {
+    height: 50,
+    paddingLeft: 16,
     marginBottom: 16,
-  },
-  input: {
-    color: "#212121",
-    backgroundColor: "#F6F6F6",
-    borderWidth: 1,
     borderStyle: "solid",
     borderColor: "#E8E8E8",
-    borderRadius: 6,
-    padding: 16,
-    fontFamily: "Roboto-Regular",
+    borderWidth: 1,
+    borderRadius: 8,
     fontSize: 16,
-  },
-  inputFocused: {
-    borderColor: "#FF6C00",
-    backgroundColor: "#fff",
-    color: "#000",
+    fontWeight: "400",
+    lineHeight: 19,
+    shadowColor: "#BDBDBD",
+    shadowOpacity: 0.2,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
   },
   button: {
-    backgroundColor: "#FF6C00",
-    borderRadius: 100,
-    width: "100%",
-    padding: 16,
+    height: 51,
     marginTop: 27,
-  },
-  buttonText: {
-    textAlign: "center",
-    color: "#fff",
-    fontSize: 16,
-  },
-  buttonShowText: {
-    fontSize: 16,
-    color: "#1B4371",
-  },
-  buttonShow: {
-    position: "absolute",
-    top: "50%",
-    right: 16,
-    lineHeight: 24,
-    marginTop: -12,
-    color: "rgba(27, 67, 113, 1)",
-  },
-  actions: {
-    overflow: "hidden",
-  },
-  redirectionText: {
-    fontSize: 16,
-    color: "#1B4371",
-  },
-  redirectionLink: {
-    fontSize: 16,
-    color: "#1B4371",
-    textDecorationLine: "underline",
-  },
-  redirection: {
-    marginTop: 16,
-    flexDirection: "row",
+    marginBottom: 16,
+    borderRadius: 100,
+    display: "flex",
     alignItems: "center",
-    marginRight: "auto",
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    backgroundColor: "#FF6C00",
+  },
+  appButtonText: {
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 19,
+    color: "#fff",
+  },
+  linkText: {
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 19,
+    color: "#1B4371",
     marginLeft: "auto",
-    gap: 5,
+    marginRight: "auto",
+  },
+  imageAvatar: {
+    width: 120,
+    height: 120,
+    position: "absolute",
+    alignSelf: "center",
+    top: -60,
+    backgroundColor: "#F6F6F6",
+    borderRadius: 16,
+  },
+  svg: {
+    position: "absolute",
+    width: 25,
+    height: 25,
+    left: 235,
+    top: 21,
+  },
+  inputLink: {
+    position: "absolute",
+    right: 32,
+    top: 308,
+  },
+  inputLinkText: {
+    fontSize: 16,
+    fontWeight: "400",
+    lineHeight: 19,
+    color: "#1B4371",
   },
 });
